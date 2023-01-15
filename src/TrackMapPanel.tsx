@@ -2,9 +2,8 @@ import React, { useEffect, useRef, ReactNode, useMemo } from 'react';
 import { Labels, PanelProps } from '@grafana/data';
 import { Position, TrackMapOptions, AntData } from 'types';
 import { css, cx } from '@emotion/css';
-import { Feature, FeatureCollection } from 'geojson';
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap, useMapEvent } from 'react-leaflet';
-import { DivIcon, Icon, LatLngBounds, LatLngBoundsExpression, LeafletEvent, PointExpression } from 'leaflet';
+import { DivIcon, heatLayer, HeatMapOptions, latLng, LatLng, hexbinLayer, HexbinLayerConfig, Icon, LatLngBounds, LatLngBoundsExpression, PointExpression, latLngBounds } from 'leaflet';
 import './leaflet.css';
 import 'leaflet/dist/leaflet.css';
 import styled from 'styled-components';
@@ -13,9 +12,9 @@ import { stylesFactory } from '@grafana/ui';
 import ReactHtmlParser from 'html-react-parser';
 
 const { antPath } = require('leaflet-ant-path');
+import 'leaflet.heat';
+import '@asymmetrik/leaflet-d3';
 
-const HeatmapLayer = require('react-leaflet-heatmap-layer-v3').default;
-//const HexbinLayer = require('react-leaflet-d3').HexbinLayer;
 
 const StyledPopup = styled(Popup)`
   .leaflet-popup-content-wrapper {
@@ -29,7 +28,6 @@ const StyledPopup = styled(Popup)`
 
 export const TrackMapPanel = ({ options, data, width, height }: PanelProps<TrackMapOptions>) => {
   const styles = getStyles();
-  //const WrappedHexbinLayer: any = withLeaflet(HexbinLayer);
 
   const primaryIcon: string = require('img/marker.png');
   const secondaryIcon: string = require('img/marker_secondary.png');
@@ -37,16 +35,13 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
   const MapBounds = () => {
     const mapInstance = useMap();
     useEffect(() => {
-      if (mapInstance !== null) {
-        if (options.map.zoomToDataBounds) {
-          const bounds = getBoundsFromPositions(positions);
-          mapInstance.fitBounds(bounds, { animate: false });
-        }
-        const bounds = mapInstance.getBounds();
-        updateMap(bounds);
+      if (options.map.zoomToDataBounds) {
+        const bounds = getBoundsFromPositions(positions);
+        mapInstance.fitBounds(bounds, { animate: false });
       }
+      const bounds = mapInstance.getBounds();
+      updateMap(bounds);
     }, [mapInstance]);
-
     return null;
   };
 
@@ -231,12 +226,8 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
     positions = [[{ latitude: 0, longitude: 0 }]];
   }
 
-  const heatData: any[][] = [];
+  const latLngs: LatLng[] = [];
   const antData: AntData[] = [];
-  const hexData: FeatureCollection = {
-    type: 'FeatureCollection',
-    features: [],
-  };
 
   positions?.forEach((positionSeries, i) => {
     const antDatas: number[][] = [];
@@ -265,27 +256,17 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
       }
     }
 
-    const heatDatas: number[][] = [];
     positionSeries.forEach((position, j) => {
       // These may be null for alignment purposes in the timeseries data
       if (position.latitude && position.longitude) {
-        heatDatas.push([
+        latLngs.push(latLng(
           position.latitude,
           position.longitude,
-          intensities !== undefined && intensities[i] && intensities[i][j] ? intensities[i][j] : 0,
-        ]);
+          intensities !== undefined && intensities[i] && intensities[i][j] ? intensities[i][j] : 0
+        ));
         antDatas.push([position.latitude, position.longitude]);
-        hexData.features.push({
-          type: 'Feature',
-          id: i,
-          geometry: {
-            type: 'Point',
-            coordinates: [position.longitude, position.latitude],
-          },
-        } as Feature);
       }
     });
-    heatData.push(heatDatas);
     antData.push({
       options: antOptions,
       data: antDatas,
@@ -373,14 +354,7 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
     }
     return markers;
   };
-/*
-  const hexbinOptions = {
-    colorScaleExtent: [1, undefined],
-    radiusScaleExtent: [1, undefined],
-    colorRange: [options.hex.colorRangeFrom, options.hex.colorRangeTo],
-    radiusRange: [options.hex.radiusRangeFrom, options.hex.radiusRangeTo],
-  };
-*/
+
   const MapMove = () => {
     const map = useMapEvent('moveend', () => {
       map.invalidateSize();
@@ -455,20 +429,18 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
     }
   }
   let antPaths = null;
-  const AntPath = (props: any) => {
+  const AntPath = (props: { positions: LatLng[], options: typeof options.ant} ) => {
     const mapInstance = useMap();
     useEffect(() => {
-      console.log("Antpath propsit!");
-      console.log(props);
       if (options.viewType === 'ant' || options.viewType === 'ant-marker') {
-        const antPolyline = antPath(props.positions, props.options);
+        const antPolyline = antPath(props.positions.slice(0, -1), props.options);
         mapInstance.addLayer(antPolyline)
         return () => {
           mapInstance.removeLayer(antPolyline)
         }
       }
       return () => {}
-    }, [mapInstance, props]);
+    }, [mapInstance, props.positions, props.options]);
     return null;
   };
 
@@ -486,25 +458,69 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
       return null;
     });
   }
-  antPaths = antData.map((d) => {
-    return d.data;
-  });
-  console.log(antPaths);
 
-  const createHeatMaps = useMemo((): ReactNode[] => {
-    return heatData.map((h, i) => (
-      <HeatmapLayer
-        key={i}
-        fitBoundsOnLoad={options.heat.fitBoundsOnLoad}
-        fitBoundsOnUpdate={options.heat.fitBoundsOnUpdate}
-        points={h}
-        longitudeExtractor={(m: any) => m[1]}
-        latitudeExtractor={(m: any) => m[0]}
-        intensityExtractor={(m: any) => parseFloat(m[2])}
-      />
-    ));
-    // eslint-disable-next-line
-  }, [heatData]);
+  const Heat = (props: { positions: LatLng[], options: typeof options.heat }) => {
+    const mapInstance = useMap();
+
+    let maxValue = 0.0;
+    let minValue = 0.0;
+    props.positions.forEach((d) => {
+
+      if (d.alt && d.alt > maxValue) {
+        maxValue = d.alt;
+      }
+      if (d.alt && d.alt < minValue) {
+        minValue = d.alt;
+      }
+    });
+    console.log("detected values: min: " + minValue + " max: " + maxValue);
+
+
+    useEffect( () => {
+      const heatOptions: HeatMapOptions = {
+        //minOpacity: 1,
+        //maxZoom: 20,
+        max: maxValue,
+        //radius: 25,
+        //blur: 15
+        //gradient: ColorGradientConfig | undefined;
+      };
+
+      if (options.viewType !== 'heat') {
+        return;
+      }
+      const heat = heatLayer(props.positions, heatOptions).addTo(mapInstance);
+      return () => {
+        mapInstance.removeLayer(heat);
+      }
+    }, [mapInstance, props.positions, maxValue]);
+
+    return null;
+  }
+
+  const HexBin = (props: { positions: LatLng[], options: typeof options.hex }) => {
+    const mapInstance = useMap();
+
+    useEffect ( () => {
+      if (options.viewType !== 'hex') {
+        return;
+      }
+      const hexData = props.positions.map( (d) => { return [ d.lng, d.lat ]});
+      const hexOptions: HexbinLayerConfig = {
+        opacity: props.options.opacity,
+        radiusRange: [ props.options.radiusRangeFrom, props.options.radiusRangeTo ],
+        colorRange: [ props.options.colorRangeFrom, props.options.colorRangeTo ]
+      };
+      const hexLayer = hexbinLayer(hexOptions);
+      hexLayer.addTo(mapInstance);
+      hexLayer.data(hexData);
+
+      return () => {
+        mapInstance.removeLayer(hexLayer);
+      }
+    }, [mapInstance, props.positions, props.options]);
+    return null;
+  }
 
   return (
     <div
@@ -521,9 +537,10 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
         zoom={options.map.zoom}
         zoomSnap={0.5}
       >
-        <AntPath positions={antPaths} options={options.ant} />
-        {options.viewType === 'heat' && createHeatMaps}
+        <AntPath positions={latLngs} options={options.ant} />
         {(options.viewType === 'marker' || options.viewType === 'ant-marker') && createMarkers()}
+        <Heat positions={latLngs} options={options.heat}/>
+        <HexBin positions={latLngs} options={options.hex}/>
         <MapBounds />
         <MapMove />
         <TileLayer attribution={options.map.tileAttribution} url={options.map.tileUrlSchema} />
