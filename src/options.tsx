@@ -196,6 +196,14 @@ export const optionsBuilder = (builder: PanelOptionsEditorBuilder<TrackMapOption
         defaultValue: false,
         showIf: (config) => config.viewType === 'heat',
       })
+      .addNumberInput({
+        category: ['Heat Map'],
+        path: 'heat.maxValue',
+        name: 'Maximum intensity',
+        description: 'Value that is considered maximum intensity for heat map. Use 0 to autodetect.',
+        defaultValue: 1.0,
+        showIf: (config) => config.viewType === 'heat',
+      })
       //marker
       .addNumberInput({
         category: ['Markers'],

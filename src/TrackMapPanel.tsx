@@ -484,17 +484,10 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
         minValue = d.alt;
       }
     });
-    console.log("detected values: min: " + minValue + " max: " + maxValue);
-
 
     useEffect( () => {
       const heatOptions: HeatMapOptions = {
-        //minOpacity: 1,
-        //maxZoom: 20,
-        max: maxValue,
-        //radius: 25,
-        //blur: 15
-        //gradient: ColorGradientConfig | undefined;
+        max: options.heat.maxValue !== 0 ? options.heat.maxValue : maxValue,
       };
 
       if (options.viewType !== 'heat') {

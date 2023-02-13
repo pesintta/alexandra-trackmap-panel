@@ -55,6 +55,7 @@ export interface AntData {
 interface HeatOptions {
   fitBoundsOnLoad: boolean;
   fitBoundsOnUpdate: boolean;
+  maxValue: number;
 }
 
 interface MarkerOptions {
