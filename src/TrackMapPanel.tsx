@@ -295,6 +295,30 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
     });
   };
 
+  const createPopups = (index: number): ReactNode[] => {
+    const popups: ReactNode[] = [];
+
+    const popup = positions ? positions[index].find((p) => p.latitude && p.longitude)?.popup : undefined;
+    if (popup !== undefined) {
+      popups.push(<StyledPopup>{popup}</StyledPopup>);
+    }
+    return popups;
+  }
+
+  const createAntPaths = (): ReactNode[] => {
+    let antpaths: ReactNode[] = [];
+
+    antData.forEach((ant, index) => {
+      antpaths.push(
+        <AntPath ant={ant}>
+          {createPopups(index)}
+        </AntPath>
+        );
+    });
+
+    return antpaths;
+  }
+
   const createMarkers = (): ReactNode[] => {
     let markers: ReactNode[] = [];
 
@@ -354,21 +378,6 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
     }
     return markers;
   };
-
-  const createPopups = (): ReactNode[] => {
-    const popups: ReactNode[] = [];
-
-    antData.forEach((d, i) => {
-      if (d.data.length && d.data.length > 1) {
-        const popup = positions ? positions[i].find((p) => p.latitude && p.longitude)?.popup : undefined;
-        if (popup !== undefined) {
-          popups.push(<StyledPopup>{popup}</StyledPopup>);
-        }
-      }
-    });
-
-    return popups;
-  }
 
   const MapMove = () => {
     const map = useMapEvent('moveend', () => {
@@ -444,25 +453,20 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
     }
   }
 
-  const AntPath = (props: { antData: AntData[]} ) => {
+  const AntPath = (props: { children: ReactNode[], ant: AntData} ) => {
     const mapInstance = useMap();
     useEffect(() => {
       const antPolylines: any[] = [];
       if (options.viewType === 'ant' || options.viewType === 'ant-marker') {
-        antData.forEach((ant) => {
-          const antPolyline = antPath(ant.data, ant.options);
-          mapInstance.addLayer(antPolyline)
-          antPolylines.push(antPolyline);
-        })
+        const antPolyline = antPath(props.ant.data, props.ant.options);
+        mapInstance.addLayer(antPolyline)
 
         return () => {
-          antPolylines.forEach( (antPolyline) => {
-            mapInstance.removeLayer(antPolyline)
-          })
+          mapInstance.removeLayer(antPolyline)
         }
       }
       return () => {}
-    }, [mapInstance, props.antData]);
+    }, [mapInstance, props.ant.data, props.ant.options]);
     return null;
   };
 
@@ -544,9 +548,8 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
         zoom={options.map.zoom}
         zoomSnap={0.5}
       >
-        <AntPath antData={antData} />
+        {(options.viewType === 'ant' || options.viewType === 'ant-marker') && createAntPaths()}
         {(options.viewType === 'marker' || options.viewType === 'ant-marker') && createMarkers()}
-        {(options.viewType === 'marker' || options.viewType === 'ant-marker') && createPopups()}
         <Heat positions={latLngs} options={options.heat}/>
         <HexBin positions={latLngs} options={options.hex}/>
         <MapBounds />
