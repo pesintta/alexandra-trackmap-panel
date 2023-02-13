@@ -156,6 +156,13 @@ export const optionsBuilder = (builder: PanelOptionsEditorBuilder<TrackMapOption
         defaultValue: false,
         showIf: (config) => config.viewType === 'ant' || config.viewType === 'ant-marker',
       })
+      .addBooleanSwitch({
+        category: ['Ant Path'],
+        path: 'ant.hardwareAccelerated',
+        name: 'Hardware Acceleration',
+        defaultValue: true,
+        showIf: (config) => config.viewType === 'ant' || config.viewType === 'ant-marker',
+      })
       .addTextInput({
         category: ['Ant Path'],
         path: 'ant.labelName',

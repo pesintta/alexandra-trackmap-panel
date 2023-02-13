@@ -44,6 +44,7 @@ export interface AntOptions {
   labelName: string;
   colorOverridesByLabel: LabelColor[];
   reverse: boolean;
+  hardwareAccelerated: boolean;
 }
 
 export interface AntData {

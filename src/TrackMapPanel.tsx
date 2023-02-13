@@ -240,7 +240,7 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
       pulseColor: options.ant.pulseColor,
       paused: options.ant.paused,
       reverse: options.ant.reverse,
-      hardwareAccelerated: true,
+      hardwareAccelerated: options.ant.hardwareAccelerated,
     };
 
     //TODO: Feature "Live track", concept of a "non-live" track, where lat/lon data is null for the latest timestamp, but exists within the panel's time window
