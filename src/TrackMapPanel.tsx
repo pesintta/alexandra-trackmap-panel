@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, ReactNode, useMemo } from 'react';
+import React, { useEffect, ReactNode } from 'react';
 import { Labels, PanelProps } from '@grafana/data';
 import { Position, TrackMapOptions, AntData } from 'types';
 import { css, cx } from '@emotion/css';
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap, useMapEvent } from 'react-leaflet';
-import { DivIcon, heatLayer, HeatMapOptions, latLng, LatLng, hexbinLayer, HexbinLayerConfig, Icon, LatLngBounds, LatLngBoundsExpression, PointExpression, latLngBounds } from 'leaflet';
+import { DivIcon, heatLayer, HeatMapOptions, latLng, LatLng, hexbinLayer, HexbinLayerConfig, Icon, LatLngBounds, LatLngBoundsExpression, PointExpression } from 'leaflet';
 import './leaflet.css';
 import 'leaflet/dist/leaflet.css';
 import styled from 'styled-components';
