@@ -543,8 +543,8 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
       >
         {(options.viewType === 'ant' || options.viewType === 'ant-marker') && createAntPaths()}
         {(options.viewType === 'marker' || options.viewType === 'ant-marker') && createMarkers()}
-        <Heat positions={latLngs} options={options.heat}/>
-        <HexBin positions={latLngs} options={options.hex}/>
+        {options.viewType === 'heat' && <Heat positions={latLngs} options={options.heat}/>}
+        {options.viewType === 'hex' && <HexBin positions={latLngs} options={options.hex}/>}
         <MapBounds />
         <MapMove />
         <TileLayer attribution={options.map.tileAttribution} url={options.map.tileUrlSchema} />
