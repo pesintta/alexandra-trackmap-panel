@@ -32,16 +32,16 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
   const primaryIcon: string = require('img/marker.png');
   const secondaryIcon: string = require('img/marker_secondary.png');
 
-  const MapBounds = () => {
+  const MapBounds = (props: { options: typeof options.map }) => {
     const mapInstance = useMap();
     useEffect(() => {
-      if (options.map.zoomToDataBounds) {
+      if (props.options.zoomToDataBounds) {
         const bounds = getBoundsFromPositions(positions);
         mapInstance.fitBounds(bounds, { animate: false });
       }
       const bounds = mapInstance.getBounds();
       updateMap(bounds);
-    }, [mapInstance]);
+    }, [mapInstance, props.options]);
     return null;
   };
 
@@ -545,7 +545,7 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
         {(options.viewType === 'marker' || options.viewType === 'ant-marker') && createMarkers()}
         {options.viewType === 'heat' && <Heat positions={latLngs} options={options.heat}/>}
         {options.viewType === 'hex' && <HexBin positions={latLngs} options={options.hex}/>}
-        <MapBounds />
+        <MapBounds options={options.map} />
         <MapMove />
         <TileLayer attribution={options.map.tileAttribution} url={options.map.tileUrlSchema} />
       </MapContainer>
