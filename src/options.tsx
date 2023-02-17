@@ -182,20 +182,6 @@ export const optionsBuilder = (builder: PanelOptionsEditorBuilder<TrackMapOption
         showIf: (config: TrackMapOptions) => config.viewType === 'ant' || config.viewType === 'ant-marker',
       })
       //heat
-      .addBooleanSwitch({
-        category: ['Heat Map'],
-        path: 'heat.fitBoundsOnLoad',
-        name: 'Fit bounds on load',
-        defaultValue: false,
-        showIf: (config) => config.viewType === 'heat',
-      })
-      .addBooleanSwitch({
-        category: ['Heat Map'],
-        path: 'heat.fitBoundsOnUpdate',
-        name: 'Fit bounds on update',
-        defaultValue: false,
-        showIf: (config) => config.viewType === 'heat',
-      })
       .addNumberInput({
         category: ['Heat Map'],
         path: 'heat.maxValue',
