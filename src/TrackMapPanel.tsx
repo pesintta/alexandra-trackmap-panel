@@ -509,7 +509,7 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
       if (options.viewType !== 'hex') {
         return;
       }
-      const hexData = props.positions.map( (d) => { return [ d.lng, d.lat ]});
+      const hexData = props.positions.map( d => [ d.lng, d.lat ]);
       const hexOptions: HexbinLayerConfig = {
         opacity: props.options.opacity,
         radiusRange: [ props.options.radiusRangeFrom, props.options.radiusRangeTo ],
