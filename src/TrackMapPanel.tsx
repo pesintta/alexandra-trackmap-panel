@@ -473,14 +473,14 @@ export const TrackMapPanel = ({ options, data, width, height }: PanelProps<Track
   const Heat = (props: { positions: LatLng[], options: typeof options.heat }) => {
     const mapInstance = useMap();
 
-    let maxValue = 0.0;
-    let minValue = 0.0;
+    let maxValue: number | undefined = undefined;
+    let minValue: number | undefined = undefined;
     props.positions.forEach((d) => {
 
-      if (d.alt && d.alt > maxValue) {
+      if (d.alt && (!maxValue || d.alt > maxValue)) {
         maxValue = d.alt;
       }
-      if (d.alt && d.alt < minValue) {
+      if (d.alt && (!minValue || d.alt < minValue)) {
         minValue = d.alt;
       }
     });
